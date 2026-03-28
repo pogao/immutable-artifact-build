@@ -8,7 +8,7 @@
   outputs = { self, nixpkgs }:
     let
       macArch = "aarch64-darwin";
-      targetArch = "aarch64-linux";
+      targetArch = "x86_64-linux";
 
       # for local development on mac m1
       macPkgs = nixpkgs.legacyPackages.${macArch};
@@ -29,7 +29,10 @@
         {
           name = "leaks-finder";
           tag = "latest";
-          contents = [ leaksFinder ];
+          contents = [
+            leaksFinder
+            pkgs.cacert
+          ];
           config = {
             Cmd = [ "${leaksFinder}/bin/leaks-finder" ];
           };
