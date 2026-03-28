@@ -31,7 +31,7 @@
           tag = "latest";
           contents = [
             leaksFinder
-            pkgs.cacert
+            linuxPkgs.cacert
           ];
           config = {
             Cmd = [ "${leaksFinder}/bin/leaks-finder" ];
