@@ -7,42 +7,40 @@
 
   outputs = { self, nixpkgs }:
     let
-      macArch = "aarch64-darwin";
-      targetArch = "x86_64-linux";
+      # Define our two specific systems
+      macSystem = "aarch64-darwin";
+      linuxSystem = "x86_64-linux";
 
-      # for local development on mac m1
-      macPkgs = nixpkgs.legacyPackages.${macArch};
-
-      # target container architecture
-      linuxPkgs = nixpkgs.legacyPackages.${targetArch};
-
-      leaksFinder = linuxPkgs.buildGoModule
-        {
-          pname = "leaks-finder";
-          version = "1.0.0";
-          src = ./.;
-          vendorHash = linuxPkgs.lib.fakeHash;
-        };
+      # Function to create the Go package for a specific system
+      mkLeaksFinder = pkgs: pkgs.buildGoModule {
+        pname = "leaks-finder";
+        version = "1.0.0";
+        src = ./.;
+        # Using a fake hash to trigger the error that gives us the real one
+        vendorHash = "sha256-NoDtIQZjxpQI8Z0FsfeH0fDD9T/aYJpmfAfbbX5S36s=";
+      };
     in
     {
-      packages.${targetArch}.default = linuxPkgs.dockerTools.buildLayeredImage
-        {
+      # Standard Nix Flake output format: packages.<system>.<name>
+      packages.${macSystem}.default = let pkgs = nixpkgs.legacyPackages.${macSystem}; in
+        pkgs.dockerTools.buildLayeredImage {
           name = "leaks-finder";
-          tag = "latest";
-          contents = [
-            leaksFinder
-            linuxPkgs.cacert
-          ];
-          config = {
-            Cmd = [ "${leaksFinder}/bin/leaks-finder" ];
-          };
+          contents = [ (mkLeaksFinder pkgs) pkgs.cacert ];
+          config.Cmd = [ "leaks-finder" ];
         };
-      devShells.${macArch}.default = macPkgs.mkShell
-        {
-          packages = [
-            macPkgs.go
-            macPkgs.golangci-lint
-          ];
+
+      packages.${linuxSystem}.default = let pkgs = nixpkgs.legacyPackages.${linuxSystem}; in
+        pkgs.dockerTools.buildLayeredImage {
+          name = "leaks-finder";
+          contents = [ (mkLeaksFinder pkgs) pkgs.cacert ];
+          config.Cmd = [ "leaks-finder" ];
         };
+
+      devShells.${macSystem}.default = nixpkgs.legacyPackages.${macSystem}.mkShell {
+        packages = [
+          nixpkgs.legacyPackages.${macSystem}.go
+          nixpkgs.legacyPackages.${macSystem}.golangci-lint
+        ];
+      };
     };
 }
