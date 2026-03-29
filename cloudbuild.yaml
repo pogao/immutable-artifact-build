@@ -34,8 +34,9 @@ steps:
         DIGEST=$(cat /workspace/image_digest.txt)
         docker run --rm \
           -v /workspace:/workspace \
+          -v /var/run/docker.sock:/var/run/docker.sock \
           anchore/syft:latest \
-          scan "registry:us-central1-docker.pkg.dev/pogao-atlantis/leaks-finder/leaks-finder@$$DIGEST" \
+          scan "docker:us-central1-docker.pkg.dev/pogao-atlantis/leaks-finder/leaks-finder@$$DIGEST" \
           --output cyclonedx-json=/workspace/sbom.json
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     id: "upload-sbom-to-registry"
