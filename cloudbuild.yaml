@@ -23,19 +23,28 @@ steps:
         echo "Detected Image ID: $$IMAGE_ID"
         TARGET_IMAGE="us-central1-docker.pkg.dev/pogao-atlantis/leaks-finder/leaks-finder:latest"
         docker tag "$$IMAGE_ID" "$$TARGET_IMAGE"
-        docker push "$$TARGET_IMAGE"
-  - name: "anchore/syft:latest"
+        DIGEST=$(docker push "$$TARGET_IMAGE" | grep -oP 'sha256:[a-f0-9]+' | tail -1)
+        echo "$$DIGEST" > /workspace/image_digest.txt
+  - name: "gcr.io/cloud-builders/docker"
     id: "generate-sbom"
+    entrypoint: "bash"
     args:
-      - "scan"
-      - "registry:us-central1-docker.pkg.dev/pogao-atlantis/leaks-finder/leaks-finder:latest"
-      - "--output"
-      - "cyclonedx-json=/workspace/sbom.json"
-
-artifacts:
-  objects:
-    location: "gs://pogao-quotes/sboms/"
-    paths: ["/workspace/sbom.json"]
+      - "-c"
+      - |
+        DIGEST=$(cat /workspace/image_digest.txt)
+        docker run --rm \
+          -v /workspace:/workspace \
+          anchore/syft:latest \
+          scan "registry:us-central1-docker.pkg.dev/pogao-atlantis/leaks-finder/leaks-finder@$$DIGEST" \
+          --output cyclonedx-json=/workspace/sbom.json
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    id: "upload-sbom-to-registry"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        IMAGE_DIGEST=$(cat /workspace/image_digest.txt)
+        gcloud artifacts sbom load --source=/workspace/sbom.json --uri="us-central1-docker.pkg.dev/pogao-atlantis/leaks-finder/leaks-finder@$$IMAGE_DIGEST"
 
 images:
   - "us-central1-docker.pkg.dev/pogao-atlantis/leaks-finder/leaks-finder:latest"
