@@ -28,11 +28,9 @@ steps:
     id: "generate-sbom"
     args:
       - "scan"
-      - "oci-archive:/workspace/leaks-finder.tar.gz"
-      - "-o"
-      - "cyclonedx-json"
-      - "--file"
-      - "/workspace/sbom.json"
+      - "registry:us-central1-docker.pkg.dev/pogao-atlantis/leaks-finder/leaks-finder:latest"
+      - "--output"
+      - "cyclonedx-json=/workspace/sbom.json"
 
 artifacts:
   objects:
