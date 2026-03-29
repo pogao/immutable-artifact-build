@@ -27,12 +27,17 @@ steps:
   - name: "anchore/syft:latest"
     id: "generate-sbom"
     args:
-      - "packages"
-      - "docker-archive:/workspace/leaks-finder.tar.gz"
+      - "scan"
+      - "/workspace/leaks-finder.tar.gz"
       - "-o"
       - "cyclonedx-json"
       - "--file"
       - "/workspace/sbom.json"
+
+artifacts:
+  objects:
+    location: "gs://pogao-quotes/sboms/"
+    paths: ["/workspace/sbom.json"]
 
 images:
   - "us-central1-docker.pkg.dev/pogao-atlantis/leaks-finder/leaks-finder:latest"
