@@ -28,7 +28,7 @@ steps:
     id: "generate-sbom"
     args:
       - "scan"
-      - "/workspace/leaks-finder.tar.gz"
+      - "oci-archive:/workspace/leaks-finder.tar.gz"
       - "-o"
       - "cyclonedx-json"
       - "--file"
