@@ -24,6 +24,13 @@ steps:
         TARGET_IMAGE="us-central1-docker.pkg.dev/pogao-atlantis/leaks-finder/leaks-finder:latest"
         docker tag "$$IMAGE_ID" "$$TARGET_IMAGE"
         docker push "$$TARGET_IMAGE"
+  - name: "anchore/syft:latest"
+    id: "generate-sbom"
+    entrypoint: "sh"
+    args:
+      - "-c"
+      - |
+        syft us-central1-docker.pkg.dev/pogao-atlantis/leaks-finder/leaks-finder:latest -o cyclonedx-json --file /workspace/sbom.json
 
 images:
   - "us-central1-docker.pkg.dev/pogao-atlantis/leaks-finder/leaks-finder:latest"
