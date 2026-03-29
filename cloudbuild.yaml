@@ -24,3 +24,9 @@ steps:
         TARGET_IMAGE="us-central1-docker.pkg.dev/pogao-atlantis/leaks-finder/leaks-finder:latest"
         docker tag "$$IMAGE_ID" "$$TARGET_IMAGE"
         docker push "$$TARGET_IMAGE"
+
+images:
+  - "us-central1-docker.pkg.dev/pogao-atlantis/leaks-finder/leaks-finder:latest"
+
+options:
+  requestedVerifyOption: VERIFIED
