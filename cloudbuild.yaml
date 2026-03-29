@@ -1,0 +1,26 @@
+steps:
+  - name: "nixos/nix:latest"
+    id: "install-nix-and-build"
+    entrypoint: "sh"
+    args:
+      - "-c"
+      - |
+        nix build ".#packages.x86_64-linux.default" --extra-experimental-features "nix-command flakes"
+        cp -L result /workspace/leaks-finder.tar.gz
+  - name: "gcr.io/cloud-builders/docker"
+    id: "push-to-registry"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        LOAD_OUTPUT=$(docker load < /workspace/leaks-finder.tar.gz)
+        echo "Docker Load Output: $$LOAD_OUTPUT"
+        IMAGE_ID=$(echo "$$LOAD_OUTPUT" | awk '/Loaded image/ {print $$3}' | head -n 1)
+        if [ -z "$$IMAGE_ID" ]; then
+          echo "ERROR: Could not find Image ID in load output."
+          exit 1
+        fi
+        echo "Detected Image ID: $$IMAGE_ID"
+        TARGET_IMAGE="us-central1-docker.pkg.dev/pogao-atlantis/leaks-finder/leaks-finder:latest"
+        docker tag "$$IMAGE_ID" "$$TARGET_IMAGE"
+        docker push "$$TARGET_IMAGE"
