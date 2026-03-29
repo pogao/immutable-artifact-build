@@ -15,6 +15,7 @@
         version = "1.0.0";
         src = ./.;
         vendorHash = "sha256-NoDtIQZjxpQI8Z0FsfeH0fDD9T/aYJpmfAfbbX5S36s=";
+        CGO_ENABLED = 0;
       };
     in
     {
